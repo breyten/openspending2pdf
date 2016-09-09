@@ -34,6 +34,9 @@ class OpenspendingAPI(object):
     def __init__(self, *args, **kwargs):
         self.base_url = 'http://openspending.nl/api/v1/'
 
+    def document(self, id):
+        return requests.get('%sdocuments/%s/' % (self.base_url, id,)).json()
+
     def main(self, year, period, gov_code, direction):
         return requests.get(
             '%saggregations/main/?year=%s&period=%s&gov_code=%s&direction=%s' % (
@@ -48,9 +51,10 @@ class OpenspendingAPI(object):
 
 def main():
     os = OpenspendingAPI()
-    labels = {l['code']: l for l in os.labels(7214, 'out')['objects']}
+    doc = os.document(7214)
+    labels = {l['code']: l for l in os.labels(doc['id'], 'out')['objects']}
     #pprint(labels.keys())
-    main_functions = {m[u'term']: m[u'total'] for m in os.main(2015, 0, '0344', 'out')['facets']['terms']['terms']}
+    main_functions = {m[u'term']: m[u'total'] for m in os.main(doc['year'], doc['period'], doc['government']['code'][2:], 'out')['facets']['terms']['terms']}
 
     # Instantiation of inherited class
     pdf = PDF()
