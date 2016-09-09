@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import locale
 import os
 import sys
 import re
@@ -60,6 +61,7 @@ class OpenspendingAPI(object):
 
 
 def main():
+    locale.setlocale( locale.LC_ALL, '' )
     os = OpenspendingAPI()
     doc = os.document(7214)
     labels = {l['code']: l for l in os.labels(doc['id'], 'out')['objects']}
@@ -72,11 +74,14 @@ def main():
     pdf.add_page()
     pdf.set_font('Times', '', 12)
     #pprint(main_functions)
-    for main_function, total in main_functions.iteritems():
+    for main_function, total in sorted(main_functions.iteritems()):
+        pdf.set_font('Times', 'B', 12)
         pdf.cell(
             0, 10,
-            "%s. %s %s" % (
-                main_function, labels[main_function][u'label'], total,), 0, 1)
+            "%s. %s" % (
+                main_function, labels[main_function][u'label'],), 0, 1)
+        pdf.set_font('Times', '', 12)
+        pdf.cell(0, 10, "%s" % (locale.currency(total),), 0, 1)
 
     pdf.output('utrecht.pdf', 'F')
 
