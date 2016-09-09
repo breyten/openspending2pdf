@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import locale
 import os
@@ -66,22 +67,30 @@ def main():
     doc = os.document(7214)
     labels = {l['code']: l for l in os.labels(doc['id'], 'out')['objects']}
     #pprint(labels.keys())
-    main_functions = {m[u'term']: m[u'total'] for m in os.main(doc['year'], doc['period'], doc['government']['code'][2:], 'out')['facets']['terms']['terms']}
-
+    main_functions_raw = os.main(doc['year'], doc['period'], doc['government']['code'][2:], 'out')
+    main_functions = {m[u'term']: m[u'total'] for m in main_functions_raw['facets']['terms']['terms']}
+    total = main_functions_raw['facets']['total']['total']
     # Instantiation of inherited class
     pdf = PDF(doc=doc)
     pdf.alias_nb_pages()
     pdf.add_page()
     pdf.set_font('Times', '', 12)
-    #pprint(main_functions)
-    for main_function, total in sorted(main_functions.iteritems()):
+    pdf.set_font('Times', 'B', 12)
+    pdf.cell(
+        0, 10,
+        'Totaal', 0, 1)
+    pdf.set_font('Times', '', 12)
+    pdf.cell(0, 10, "%s" % (locale.currency(total, '€', '.'),), 0, 1)
+    pdf.cell(190, 2, '', 0, 1, '', True)
+    for main_function, amount in sorted(main_functions.iteritems()):
         pdf.set_font('Times', 'B', 12)
         pdf.cell(
             0, 10,
             "%s. %s" % (
                 main_function, labels[main_function][u'label'],), 0, 1)
         pdf.set_font('Times', '', 12)
-        pdf.cell(0, 10, "%s" % (locale.currency(total),), 0, 1)
+        pdf.cell(0, 10, "%s" % (locale.currency(amount, '€', '.'),), 0, 1)
+        pdf.cell((amount * 190 / total), 2, '', 0, 1, '', True)
 
     pdf.output('utrecht.pdf', 'F')
 
