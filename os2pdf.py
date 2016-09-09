@@ -87,7 +87,7 @@ def main():
 
     sub_functions_raw = os.sub(doc['year'], doc['period'], doc['government']['code'][2:], 'out')
     sub_functions = {m[u'term']: m[u'total'] for m in sub_functions_raw['facets']['terms']['terms']}
-    pprint(sub_functions)
+    # pprint(sub_functions)
 
     # Instantiation of inherited class
     pdf = PDF(doc=doc)
@@ -99,6 +99,20 @@ def main():
         caption = "%s. %s" % (
                 main_function, labels[main_function][u'label'],)
         print_line(pdf, caption, amount, total)
+
+    for main_function, total in sorted(main_functions.iteritems()):
+        caption = "%s. %s" % (
+                main_function, labels[main_function][u'label'],)
+        pdf.alias_nb_pages()
+        pdf.add_page()
+        pdf.set_font('Times', '', 12)
+        print_line(pdf, caption, total, total)
+        for sub_function, amount in sorted(sub_functions.iteritems()):
+            if not sub_function.startswith(main_function):
+                continue
+            caption = "%s. %s" % (
+                    sub_function, labels[sub_function][u'label'],)
+            print_line(pdf, caption, amount, total)
 
     pdf.output('utrecht.pdf', 'F')
 
