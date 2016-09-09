@@ -1,3 +1,9 @@
-.navbar, .sidebar-nav, .nav-tabs {
+* {
+  border: 1px solid black;
+}
+.navbar-fixed-top {
+  margin-top: 0;
+}
+.navbar, .sidebar-nav, .nav-tabs, button {
   display: none;
 }
