@@ -9,15 +9,25 @@ import requests
 from fpdf import FPDF
 
 class PDF(FPDF):
+    def __init__(self, *args, **kwargs):
+        super(PDF, self).__init__()
+        self.doc = kwargs['doc']
+        self.periods = {
+            0: 'begroting',
+            5: 'realisatie'
+        }
+
     def header(self):
         # Logo
         #self.image('logo_pb.png', 10, 8, 33)
         # Arial bold 15
         self.set_font('Arial', 'B', 15)
         # Move to the right
-        self.cell(80)
+        # self.cell(80)
         # Title
-        self.cell(30, 10, 'Title', 1, 0, 'C')
+        title = 'Openspending - %s - %s %s' % (
+            self.doc['government']['name'],  self.periods[self.doc['period']], self.doc['year'],)
+        self.cell(30, 10, title, 0, 0)
         # Line break
         self.ln(20)
 
@@ -57,7 +67,7 @@ def main():
     main_functions = {m[u'term']: m[u'total'] for m in os.main(doc['year'], doc['period'], doc['government']['code'][2:], 'out')['facets']['terms']['terms']}
 
     # Instantiation of inherited class
-    pdf = PDF()
+    pdf = PDF(doc=doc)
     pdf.alias_nb_pages()
     pdf.add_page()
     pdf.set_font('Times', '', 12)
