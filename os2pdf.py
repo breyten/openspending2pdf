@@ -51,7 +51,12 @@ class OpenspendingAPI(object):
 
     def main(self, year, period, gov_code, direction):
         return requests.get(
-            '%saggregations/main/?year=%s&period=%s&gov_code=%s&direction=%s' % (
+            '%saggregations/main/?year=%s&period=%s&gov_code=%s&direction=%s&limit=0' % (
+                self.base_url, year, period, gov_code, direction,)).json()
+
+    def sub(self, year, period, gov_code, direction):
+        return requests.get(
+            '%saggregations/sub/?year=%s&period=%s&gov_code=%s&direction=%s&limit=0' % (
                 self.base_url, year, period, gov_code, direction,)).json()
 
     def labels(self, document_id, direction):
@@ -60,6 +65,15 @@ class OpenspendingAPI(object):
                 self.base_url, document_id, direction,)).json()
 
 
+
+def print_line(pdf, caption, amount, total):
+    pdf.set_font('Times', 'B', 12)
+    pdf.cell(
+        0, 10,
+        caption, 0, 1)
+    pdf.set_font('Times', '', 12)
+    pdf.cell(0, 10, "%s" % (locale.currency(amount, '€', '.'),), 0, 1)
+    pdf.cell(amount * 190 / total, 2, '', 0, 1, '', True)
 
 def main():
     locale.setlocale( locale.LC_ALL, '' )
@@ -70,27 +84,21 @@ def main():
     main_functions_raw = os.main(doc['year'], doc['period'], doc['government']['code'][2:], 'out')
     main_functions = {m[u'term']: m[u'total'] for m in main_functions_raw['facets']['terms']['terms']}
     total = main_functions_raw['facets']['total']['total']
+
+    sub_functions_raw = os.sub(doc['year'], doc['period'], doc['government']['code'][2:], 'out')
+    sub_functions = {m[u'term']: m[u'total'] for m in sub_functions_raw['facets']['terms']['terms']}
+    pprint(sub_functions)
+
     # Instantiation of inherited class
     pdf = PDF(doc=doc)
     pdf.alias_nb_pages()
     pdf.add_page()
     pdf.set_font('Times', '', 12)
-    pdf.set_font('Times', 'B', 12)
-    pdf.cell(
-        0, 10,
-        'Totaal', 0, 1)
-    pdf.set_font('Times', '', 12)
-    pdf.cell(0, 10, "%s" % (locale.currency(total, '€', '.'),), 0, 1)
-    pdf.cell(190, 2, '', 0, 1, '', True)
+    print_line(pdf, 'Totaal', total, total)
     for main_function, amount in sorted(main_functions.iteritems()):
-        pdf.set_font('Times', 'B', 12)
-        pdf.cell(
-            0, 10,
-            "%s. %s" % (
-                main_function, labels[main_function][u'label'],), 0, 1)
-        pdf.set_font('Times', '', 12)
-        pdf.cell(0, 10, "%s" % (locale.currency(amount, '€', '.'),), 0, 1)
-        pdf.cell((amount * 190 / total), 2, '', 0, 1, '', True)
+        caption = "%s. %s" % (
+                main_function, labels[main_function][u'label'],)
+        print_line(pdf, caption, amount, total)
 
     pdf.output('utrecht.pdf', 'F')
 
