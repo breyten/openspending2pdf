@@ -73,7 +73,11 @@ def print_line(pdf, caption, amount, total):
         caption, 0, 1)
     pdf.set_font('Times', '', 12)
     pdf.cell(0, 10, "%s" % (locale.currency(amount, '€', '.'),), 0, 1)
-    pdf.cell(amount * 190 / total, 2, '', 0, 1, '', True)
+    if (amount > 0) and (total > 0):
+        width = amount * 190 / total
+    else:
+        width = 0.01
+    pdf.cell(width, 2, '', 0, 1, '', True)
 
 def main():
     locale.setlocale( locale.LC_ALL, '' )
